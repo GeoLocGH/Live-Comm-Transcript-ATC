@@ -98,5 +98,5 @@ export interface FlightPlan {
   route: string;
   aircraftType: string;
   cruisingAltitude: string;
-  flightRules: string;
+  flightRules: 'VFR' | 'IFR';
 }

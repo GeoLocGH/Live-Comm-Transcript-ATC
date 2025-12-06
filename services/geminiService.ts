@@ -355,9 +355,7 @@ export async function connectToLive(
 ): Promise<any> {
     const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
-    // Manually accumulate finalized segments to handle pauses correctly
-    let fullTranscript = "";
-    let currentInterim = "";
+    let lastInterimText = "";
     
     const aviationContext = `
       You are an expert Aviation Transcriber with advanced predictive text capabilities.
@@ -395,35 +393,20 @@ export async function connectToLive(
                 console.log("Live session connected");
             },
             onmessage: (message: LiveServerMessage) => {
-                // Check for transcriptions
                 const transcription = message.serverContent?.inputTranscription;
                 if (transcription) {
                     const text = transcription.text;
                     if (text) {
-                        if (transcription.isFinal) {
-                            // If API marks segment as final, accumulate it but DO NOT trigger onFinal stop yet.
-                            // We wait for silence/turnComplete for that.
-                            fullTranscript += text + " ";
-                            currentInterim = "";
-                            // Update display with full accumulated text
-                            onInterim(fullTranscript.trim(), 0.9);
-                        } else {
-                            currentInterim = text;
-                            // Update display with full + interim
-                            onInterim((fullTranscript + currentInterim).trim(), 0.9);
-                        }
+                        lastInterimText = text;
+                        onInterim(text, 0.9);
                     }
                 }
                 
-                // Handle Turn Complete signal
-                // This signal (or client-side silence) is the authority for stopping the listen session.
                 if (message.serverContent?.turnComplete) {
-                     const totalText = (fullTranscript + currentInterim).trim();
-                     if (totalText.length > 0) {
-                         console.log("Turn complete detected. Finalizing:", totalText);
-                         onFinal(totalText, 0.9);
-                         fullTranscript = "";
-                         currentInterim = "";
+                     if (lastInterimText.trim().length > 0) {
+                         console.log("Turn complete detected. Finalizing:", lastInterimText);
+                         onFinal(lastInterimText.trim(), 0.9);
+                         lastInterimText = "";
                      }
                 }
             },

@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { ConversationEntry, PhraseAnalysis } from '../types';
 import PilotIcon from './icons/PilotIcon';

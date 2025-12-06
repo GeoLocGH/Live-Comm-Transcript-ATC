@@ -509,6 +509,12 @@ const App: React.FC = () => {
     }
   }, [cleanupAudio, processTranscription, saveCurrentSession, isTrainingMode, processUserReadback]);
 
+  // Fix: Create a ref to hold the latest processAndStop function to avoid stale closures in audio callbacks
+  const processAndStopRef = useRef(processAndStop);
+  useEffect(() => {
+    processAndStopRef.current = processAndStop;
+  }, [processAndStop]);
+
   const stopListening = useCallback(async (saveSession: boolean = true) => {
       if (sessionPromiseRef.current) {
         try {
@@ -585,7 +591,7 @@ const App: React.FC = () => {
       const onFinalTranscription = (finalText: string, confidence?: number) => {
         finalizedTranscriptRef.current = finalText;
         lastConfidenceRef.current = confidence;
-        processAndStop();
+        processAndStopRef.current(); // Use the ref to get the latest function
       };
 
       const onError = (error: any) => {
@@ -692,7 +698,7 @@ const App: React.FC = () => {
             if (!silenceTimerRef.current && (interimTranscriptRef.current.length > 0 || finalizedTranscriptRef.current.length > 0)) {
                 silenceTimerRef.current = setTimeout(() => {
                     console.log("Silence timeout detected. Stopping...");
-                    processAndStop();
+                    processAndStopRef.current(); // Use the ref to get the latest function
                 }, SILENCE_TIMEOUT_MS);
             }
         }
@@ -731,6 +737,7 @@ const App: React.FC = () => {
     }
   }, [status, isReviewing, language, processAndStop, stopListening, isTrainingMode, diversityMode]);
 
+  // ... (rest of handle functions remain the same)
   const handleToggleListening = useCallback(async () => {
     if (status === AppStatus.IDLE || status === AppStatus.ERROR) {
       await startListening();
@@ -763,7 +770,7 @@ const App: React.FC = () => {
             setSpeakingContent('Speaking Read-back...');
             const audioBytes = await generateSpeech(readbackText, voice);
             if (audioBytes) {
-                await playAudio(audioBytes, false); // No radio effect for pilot readback regeneration
+                await playAudio(audioBytes, false); 
                 saveCurrentSession();
             } else {
                 setStatus(AppStatus.IDLE);
@@ -879,7 +886,6 @@ const App: React.FC = () => {
     setShowSettings(false);
   };
   
-  // --- Training Mode Functions ---
   const handleScenarioSelected = useCallback(async (scenario: TrainingScenario) => {
     handleNewSession();
     setIsTrainingMode(true);
@@ -893,8 +899,8 @@ const App: React.FC = () => {
     
     const audioBytes = await generateSpeech(scenario.atcInstruction, atcVoice);
     if (audioBytes) {
-        await playAudio(audioBytes, true); // Apply radio effect for ATC
-        setStatus(AppStatus.IDLE); // Ready for user to speak
+        await playAudio(audioBytes, true); 
+        setStatus(AppStatus.IDLE); 
         setSpeakingContent('');
     } else {
         setStatus(AppStatus.IDLE);
@@ -949,22 +955,19 @@ const App: React.FC = () => {
 
     setStatus(AppStatus.THINKING);
 
-    // Include callsign for realism
     const atcInstruction = `${callsign}, Squawk ${squawkCodeInput}.`;
     const atcEntry: ConversationEntry = { speaker: 'ATC', text: atcInstruction };
 
-    // Optimistic update for ATC text
     const logWithAtc = [...conversationLogRef.current, atcEntry];
     setConversationLog(logWithAtc);
 
     try {
-        // 1. Speak ATC Instruction
         setStatus(AppStatus.SPEAKING);
         setSpeakingContent('Playing ATC instruction...');
         const atcAudioBytes = await generateSpeech(atcInstruction, atcVoice);
 
         if (atcAudioBytes) {
-            await playAudio(atcAudioBytes, true); // ATC voice, radio effect
+            await playAudio(atcAudioBytes, true); 
         }
 
         setStatus(AppStatus.THINKING);
@@ -978,7 +981,7 @@ const App: React.FC = () => {
         const pilotAudioBytes = await generateSpeech(readbackText, voice);
         
         if (pilotAudioBytes) {
-            await playAudio(pilotAudioBytes, false); // Pilot voice, clean
+            await playAudio(pilotAudioBytes, false); 
         }
         
         setStatus(AppStatus.IDLE);
@@ -1053,11 +1056,12 @@ const App: React.FC = () => {
       <div className="w-full max-w-3xl mx-auto flex flex-col space-y-6">
         <header className="text-center relative border-b border-gray-700/50 pb-6">
           <h1 className="text-4xl md:text-5xl font-bold text-cyan-400">Live Comm TranScript ATC</h1>
-          <p className="text-gray-400 mt-2">AI-Powered Radio Communication Assistant</p>
-          <div className="absolute top-0 right-0 flex space-x-2">
+          <div className="relative mt-2 flex items-center justify-center">
+            <p className="text-gray-400">AI-Powered Radio Communication Assistant</p>
+            <div className="absolute right-0 flex space-x-2">
             <button
                 onClick={() => setShowFlightPlanModal(true)}
-                className="p-2 text-gray-500 hover:text-cyan-400 transition-colors"
+                className="p-2 text-orange-600 hover:text-orange-500 transition-colors"
                 aria-label="Create Flight Plan"
                 title="Create Flight Plan"
             >
@@ -1065,7 +1069,7 @@ const App: React.FC = () => {
             </button>
             <button
                 onClick={() => setShowTrainingModal(true)}
-                className="p-2 text-gray-500 hover:text-cyan-400 transition-colors"
+                className="p-2 text-orange-600 hover:text-orange-500 transition-colors"
                 aria-label="Open training scenarios"
                 title="Open training scenarios"
             >
@@ -1073,7 +1077,7 @@ const App: React.FC = () => {
             </button>
             <button
                 onClick={() => setShowSettings(true)}
-                className="p-2 text-gray-500 hover:text-cyan-400 transition-colors"
+                className="p-2 text-orange-600 hover:text-orange-500 transition-colors"
                 aria-label="Open settings"
                 title="Open settings"
             >
@@ -1081,12 +1085,13 @@ const App: React.FC = () => {
             </button>
             <button
                 onClick={() => setShowOnboarding(true)}
-                className="p-2 text-gray-500 hover:text-cyan-400 transition-colors"
+                className="p-2 text-orange-600 hover:text-orange-500 transition-colors"
                 aria-label="Show tutorial"
                 title="Show tutorial"
             >
                 <InfoIcon className="w-6 h-6" />
             </button>
+            </div>
           </div>
         </header>
         <main className="flex flex-col flex-grow items-center justify-center space-y-6">
