@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const NUM_BARS = 20;
 
 const SquelchVisualizer: React.FC = () => {
-    const [barHeights, setBarHeights] = useState<number[]>([]);
+    const [barHeights, setBarHeights] = useState<number[]>(() => Array.from({ length: NUM_BARS }, () => Math.random() * 0.2 + 0.05));
     const animationFrameRef = useRef<number | null>(null);
   
     useEffect(() => {

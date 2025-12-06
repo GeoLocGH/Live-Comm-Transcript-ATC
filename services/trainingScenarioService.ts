@@ -1,3 +1,4 @@
+
 import { TrainingScenario } from '../types';
 import { BUILT_IN_SCENARIOS } from '../trainingScenarios';
 

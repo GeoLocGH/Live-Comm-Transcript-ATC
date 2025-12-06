@@ -1,3 +1,4 @@
+
 import { TrainingScenario } from './types';
 
 export const BUILT_IN_SCENARIOS: Omit<TrainingScenario, 'id'>[] = [

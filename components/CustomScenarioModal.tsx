@@ -1,13 +1,4 @@
 
-
-
-
-
-
-
-
-
-
 import React, { useState, useMemo } from 'react';
 import { TrainingScenario } from '../types';
 import TrashIcon from './icons/TrashIcon';

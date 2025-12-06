@@ -737,7 +737,6 @@ const App: React.FC = () => {
     }
   }, [status, isReviewing, language, processAndStop, stopListening, isTrainingMode, diversityMode]);
 
-  // ... (rest of handle functions remain the same)
   const handleToggleListening = useCallback(async () => {
     if (status === AppStatus.IDLE || status === AppStatus.ERROR) {
       await startListening();

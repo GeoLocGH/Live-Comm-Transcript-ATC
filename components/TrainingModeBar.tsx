@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TrainingScenario } from '../types';
 import GraduationCapIcon from './icons/GraduationCapIcon';

@@ -1,3 +1,4 @@
+
 import { Session, ConversationEntry } from '../types';
 
 const SESSIONS_KEY = 'atc-copilot-sessions';
